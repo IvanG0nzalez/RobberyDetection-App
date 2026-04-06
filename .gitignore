@@ -1,0 +1,85 @@
+# BACKEND
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos temporales y de procesamiento de video
+backend/temp/*.mp4
+backend/temp/*.avi
+backend/temp/*.mkv
+backend/temp/*.webm
+backend/temp/*.mov
+backend/temp/*.json
+
+# Herramientas de testing y coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Archivos del SO
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Configuración de IDEs y Editores locales
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+# FRONTEND
+# dependencies
+node_modules/
+.pnp/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+coverage/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# misc
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
