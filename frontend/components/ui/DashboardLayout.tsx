@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           
           {isMobile && (
-            <button className="text-muted hover:text-ink" onClick={() => setIsSidebarOpen(false)}>
+            <button className="text-muted hover:text-ink hover:bg-line/20 p-2 rounded-md transition-colors cursor-pointer" onClick={() => setIsSidebarOpen(false)}>
               <X size={20} />
             </button>
           )}
@@ -106,7 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <li className="mt-2 pt-2 border-t border-line/50">
               <button 
                 onClick={() => { setIsAboutOpen(!isAboutOpen); if (!isSidebarOpen) setIsSidebarOpen(true); }}
-                className={`flex w-full items-center justify-between p-3 rounded-md font-medium transition-colors text-muted hover:bg-line/20 hover:text-ink
+                className={`flex w-full items-center justify-between p-3 rounded-md font-medium cursor-pointer transition-colors text-muted hover:bg-line/20 hover:text-ink
                   ${(!isSidebarOpen && !isMobile) ? "justify-center" : "gap-3"}`}
                 title={(!isSidebarOpen && !isMobile) ? "Acerca de" : ""}
               >
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className="h-16 bg-card border-b border-line flex items-center justify-between px-4 md:px-6 z-10 flex-shrink-0">
           <div className="flex items-center">
             <button 
-              className="p-2 rounded-md hover:bg-line/20 text-muted hover:text-ink transition-colors flex items-center justify-center -ml-2"
+              className="p-2 rounded-md hover:bg-line/20 text-muted hover:text-ink transition-colors flex items-center justify-center -ml-2 cursor-pointer"
               onClick={toggleSidebar}
               title="Alternar menú"
             >

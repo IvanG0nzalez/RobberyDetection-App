@@ -110,7 +110,7 @@ export default function AnalysisDashboard({
                 title={`Clip peso atencional: ${seg.weight.toFixed(4)}`}
               >
                   <div className="flex items-center gap-3">
-                    <button className="text-brand"> <PlayCircle size={20} /> </button>
+                    <button className="text-brand hover:opacity-75 transition-opacity cursor-pointer"> <PlayCircle size={20} /> </button>
                     <span className="font-semibold text-sm">Clip {seg.clip}</span>
                   </div>
                   <div className="flex gap-4 items-center">
