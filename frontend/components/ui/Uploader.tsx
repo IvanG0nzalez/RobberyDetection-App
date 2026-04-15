@@ -132,7 +132,7 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
       const data = await ffmpeg.readFile(outputName);
       
       // Crear un blob y nuevo obj 'File' recortado
-      const trimmedBlob = new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' });
+      const trimmedBlob = new Blob([new Uint8Array(data as any)], { type: 'video/mp4' });
       const trimmedFile = new File([trimmedBlob], `recortado_${selectedFile.name}`, { type: 'video/mp4' });
       
       onFileSelected(trimmedFile);
