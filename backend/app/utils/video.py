@@ -3,6 +3,46 @@ import torch
 import numpy as np
 from torchvision import transforms
 from app.core.config import settings
+import os
+
+def trim_video(input_path: str, output_path: str, start_time: float, end_time: float):
+    """
+    Recorta el video desde start_time hasta end_time y lo guarda en output_path.
+    """
+    cap = cv2.VideoCapture(input_path)
+    if not cap.isOpened():
+        raise ValueError(f"No se pudo abrir el video {input_path}")
+    
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 0:
+        fps = settings.FPS
+
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    
+    # Calcular los frames de inicio y fin
+    start_frame = int(start_time * fps)
+    if end_time > start_time:
+        end_frame = int(end_time * fps)
+    else:
+        # Si no hay end_time especificado, grabar hasta el final
+        end_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+    current_frame = start_frame
+    
+    while cap.isOpened() and current_frame <= end_frame:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        out.write(frame)
+        current_frame += 1
+        
+    cap.release()
+    out.release()
 
 def extract_frames(video_path: str) -> list:
     """Extract frames from a video path, resampling them to the configured FPS.

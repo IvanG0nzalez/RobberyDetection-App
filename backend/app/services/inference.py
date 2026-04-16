@@ -16,24 +16,24 @@ from app.schemas.response import InferenceResult, ImportantSegment
 
 logger = logging.getLogger(__name__)
 
-def run_inference(task_id: str, video_path: str, r3d_model: torch.nn.Module, lstm_model: torch.nn.Module):
+def run_inference(task_id: str, video_path: str, r3d_model: torch.nn.Module, lstm_model: torch.nn.Module, start_time_offset: float = 0.0):
     result_path = TEMP_DIR / f"{task_id}.json"
     
     try:
         logger.info(f"[{task_id}] Iniciando proceso de inferencia para {video_path}")
         
         # Procesamiento de video
-        logger.info(f"[{task_id}] Extrayendo frames...")
+        logger.info(f"[{task_id}] Extrayendo frames (offset start_time = {start_time_offset}s)...")
         frames = extract_frames(video_path)
         if not frames:
             raise ValueError("No se pudieron extraer frames del video.")
         
-        logger.info(f"[{task_id}] Preprocesando frames...")
+        logger.info(f"[{task_id}] Se extrajeron {len(frames)} frames. Preprocesando frames...")
         tensor_frames = preprocess_frames(frames)
         
         # Extracción de clips
-        logger.info(f"[{task_id}] Segmentando clips...")
         clips = extract_clips(tensor_frames)
+        logger.info(f"[{task_id}] Segmentando: se generaron {len(clips)} clips listos para inferencia.")
         
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
@@ -88,6 +88,8 @@ def run_inference(task_id: str, video_path: str, r3d_model: torch.nn.Module, lst
         prob_normal = 1.0 - prob_robbery
         prediction_label = "Robbery" if prob_robbery >= settings.THRESHOLD else "Normal"
         
+        logger.info(f"[{task_id}] Resultados Lotes -> Predicción: {prediction_label} | Robo: {prob_robbery:.4f} | Normal: {prob_normal:.4f}")
+        
         # Top-K importante clips a lo largo de todo el video
         top_k = min(5, len(attention_curve))
         attention_np = np.array(attention_curve)
@@ -97,7 +99,7 @@ def run_inference(task_id: str, video_path: str, r3d_model: torch.nn.Module, lst
         for idx in important_idx:
             # Calcular timestamp
             start_frame = idx * settings.STRIDE if settings.OVERLAPPING else idx * (tensor_frames.size(1) - settings.CLIP_LEN) / max(1, len(attention_curve))
-            time_sec = float(start_frame) / settings.FPS
+            time_sec = float(start_frame) / settings.FPS + start_time_offset
             
             important_segments.append(ImportantSegment(
                 clip=int(idx),
@@ -105,13 +107,18 @@ def run_inference(task_id: str, video_path: str, r3d_model: torch.nn.Module, lst
                 weight=round(float(attention_np[idx]), 4)
             ))
             
+        final_end_time = float(tensor_frames.size(1)) / settings.FPS + start_time_offset
+        logger.info(f"[{task_id}] Generados top {len(important_idx)} segmentos importantes. Video total abarcado: de {start_time_offset:.2f}s a {final_end_time:.2f}s")
+            
         result = InferenceResult(
             status="Completed",
             prediction=prediction_label,
             probability_robbery=round(prob_robbery, 4),
             probability_normal=round(prob_normal, 4),
             important_segments=important_segments,
-            attention_curve=[round(float(v), 4) for v in attention_curve]
+            attention_curve=[round(float(v), 4) for v in attention_curve],
+            start_time=start_time_offset,
+            end_time=final_end_time
         )
         
         logger.info(f"[{task_id}] Inferencia completada con éxito.")

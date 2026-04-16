@@ -3,18 +3,27 @@ import os
 import logging
 from typing import Dict, Any
 
-from fastapi import APIRouter, File, UploadFile, BackgroundTasks, Request, HTTPException
+from fastapi import APIRouter, File, UploadFile, BackgroundTasks, Request, HTTPException, Form
 
 from app.core.config import TEMP_DIR, settings
 from app.services.inference import run_inference
 from app.schemas.response import TaskResponse, InferenceResult
+from app.utils.video import trim_video
 
 log = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/analyze", response_model=TaskResponse)
-async def analyze_video(request: Request, background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def analyze_video(
+    request: Request, 
+    background_tasks: BackgroundTasks, 
+    file: UploadFile = File(...),
+    start_time: float = Form(0.0),
+    end_time: float = Form(0.0)
+):
     task_id = str(uuid.uuid4())
+    log.info(f"[{task_id}] Recibiendo solicitud de análisis: archivo={file.filename}, start_time={start_time}, end_time={end_time}")
+    
     video_path = TEMP_DIR / f"{task_id}.mp4"
     result_path = TEMP_DIR / f"{task_id}.json"
     
@@ -28,7 +37,25 @@ async def analyze_video(request: Request, background_tasks: BackgroundTasks, fil
                     break
                 buffer.write(chunk)
     except Exception as e:
+        log.error(f"[{task_id}] Error guardando el video original: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error guardando el video: {str(e)}")
+        
+    # Recortar video original
+    try:
+        if end_time > start_time:
+            log.info(f"[{task_id}] Recortando video desde {start_time}s hasta {end_time}s...")
+            trimmed_path = TEMP_DIR / f"{task_id}_trimmed.mp4"
+            trim_video(str(video_path), str(trimmed_path), float(start_time), float(end_time))
+            # Reemplazar archivo original con el recortado
+            if trimmed_path.exists():
+                video_path.unlink(missing_ok=True)
+                trimmed_path.rename(video_path)
+            log.info(f"[{task_id}] Video recortado exitosamente.")
+        else:
+            log.info(f"[{task_id}] Procesando video completo (no se requiere recorte).")
+    except Exception as e:
+        log.error(f"[{task_id}] Error recortando video: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error recortando el video: {str(e)}")
     
     initial_state = InferenceResult(status="processing")
     with open(result_path, "w", encoding="utf-8") as f:
@@ -40,7 +67,7 @@ async def analyze_video(request: Request, background_tasks: BackgroundTasks, fil
     lstm_model = request.app.state.models.get('lstm_classifier')
     
     # Encolar la tarea de inferencia
-    background_tasks.add_task(run_inference, task_id, str(video_path), r3d_model, lstm_model)
+    background_tasks.add_task(run_inference, task_id, str(video_path), r3d_model, lstm_model, float(start_time))
     
     return TaskResponse(
         task_id=task_id, 

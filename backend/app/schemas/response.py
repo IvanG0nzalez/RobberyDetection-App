@@ -19,3 +19,5 @@ class InferenceResult(BaseModel):
     important_segments: Optional[List[ImportantSegment]] = None
     attention_curve: Optional[List[float]] = None
     error_message: Optional[str] = None
+    start_time: Optional[float] = None
+    end_time: Optional[float] = None
