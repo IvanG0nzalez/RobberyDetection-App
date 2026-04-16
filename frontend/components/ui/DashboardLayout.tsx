@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-bg text-ink relative">
+    <div className="flex min-h-screen w-full bg-bg text-ink relative">
       {/* Overlay móvil */}
       {isMobile && isSidebarOpen && (
         <div 
@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside 
-        className={`fixed md:relative flex flex-col z-50 h-full bg-card border-r border-line transition-all duration-300 ease-in-out
+        className={`fixed md:sticky md:top-0 flex flex-col z-50 h-screen bg-card border-r border-line transition-all duration-300 ease-in-out
         ${isSidebarOpen ? "w-64 translate-x-0" : isMobile ? "-translate-x-full w-64" : "w-20 translate-x-0"}`}
       >
         <div className="h-16 flex items-center justify-between px-4 text-brand">
@@ -145,9 +145,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col min-w-0 h-full">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Topbar */}
-        <header className="h-16 bg-card border-b border-line flex items-center justify-between px-4 md:px-6 z-10 flex-shrink-0">
+        <header className="sticky top-0 h-16 bg-card border-b border-line flex items-center justify-between px-4 md:px-6 z-40 flex-shrink-0">
           <div className="flex items-center">
             <button 
               className="p-2 rounded-md hover:bg-line/20 text-muted hover:text-ink transition-colors flex items-center justify-center -ml-2 cursor-pointer"
@@ -164,7 +164,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
         
         {/* Contenido de la página */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 h-full relative">
+        <main className="flex-1 p-4 md:p-8 relative">
            {children}
         </main>
       </div>

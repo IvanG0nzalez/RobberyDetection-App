@@ -33,7 +33,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col min-h-full w-full">
       <div className="mb-8 flex items-center justify-between">
         <div>
            <h1 className="text-3xl font-extrabold mb-2 text-brand py-1 pr-2">Analizar Video</h1>
