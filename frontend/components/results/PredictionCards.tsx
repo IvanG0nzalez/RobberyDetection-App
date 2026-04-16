@@ -35,8 +35,12 @@ export default function AnalysisDashboard({
 
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const vid = e.currentTarget;
-    if (vid.duration && vid.duration > 0 && numClips > 0) {
-      const ratio = Math.max(0, Math.min(1, vid.currentTime / vid.duration));
+    const sTime = result.start_time ?? 0;
+    const eTime = result.end_time ?? vid.duration;
+    const totalSegmentDuration = eTime - sTime;
+    
+    if (vid.currentTime >= sTime && vid.currentTime <= eTime && totalSegmentDuration > 0 && numClips > 0) {
+      const ratio = Math.max(0, Math.min(1, (vid.currentTime - sTime) / totalSegmentDuration));
       const idx = Math.floor(ratio * numClips);
       setActiveClipIndex(idx >= numClips ? numClips - 1 : idx);
     } else {
@@ -47,7 +51,9 @@ export default function AnalysisDashboard({
   const handleChartClick = (e: any) => {
     if (e && e.activeTooltipIndex !== undefined && videoRef.current && videoRef.current.duration) {
       const idx = e.activeTooltipIndex;
-      const jumpTime = (idx / numClips) * videoRef.current.duration;
+      const sTime = result.start_time ?? 0;
+      const eTime = result.end_time ?? videoRef.current.duration;
+      const jumpTime = sTime + (idx / numClips) * (eTime - sTime);
       videoRef.current.currentTime = jumpTime;
       videoRef.current.play();
     }

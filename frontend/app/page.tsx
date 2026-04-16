@@ -21,9 +21,9 @@ export default function Home() {
     }
   }, [videoFile]);
 
-  const handleVideoSelect = (file: File) => {
+  const handleVideoSelect = (file: File, startTime: number, endTime: number) => {
     setVideoFile(file);
-    analyzeVideo(file);
+    analyzeVideo(file, startTime, endTime);
   };
 
   const handleRestart = () => {

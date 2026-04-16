@@ -20,6 +20,8 @@ export interface InferenceResponse {
   important_segments?: ImportantSegment[];
   attention_curve?: number[];
   error_message?: string;
+  start_time?: number;
+  end_time?: number;
 }
 
 export function useInference() {
@@ -62,12 +64,14 @@ export function useInference() {
     };
   }, [taskId]);
 
-  const analyzeVideo = async (file: File) => {
+  const analyzeVideo = async (file: File, startTime: number, endTime: number) => {
     setLoading(true);
     setResult(null);
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("start_time", startTime.toString());
+    formData.append("end_time", endTime.toString());
 
     try {
       toast.info("Enviando video al servidor...");

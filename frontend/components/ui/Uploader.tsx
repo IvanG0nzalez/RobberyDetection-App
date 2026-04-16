@@ -2,10 +2,8 @@
 
 import { UploadCloud, CheckCircle, Video, Play, Pause, Loader2 } from "lucide-react";
 import { ChangeEvent, DragEvent, useState, useRef, useEffect } from "react";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
 
-export default function Uploader({ onFileSelected }: { onFileSelected: (f: File) => void }) {
+export default function Uploader({ onFileSelected }: { onFileSelected: (f: File, startTime: number, endTime: number) => void }) {
   const [isDrag, setIsDrag] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -14,10 +12,8 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
   const [endTime, setEndTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [, setCurrentTime] = useState(0);
-  const [isTrimming, setIsTrimming] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const ffmpegRef = useRef(new FFmpeg());
 
   useEffect(() => {
     if (selectedFile) {
@@ -26,17 +22,6 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
       return () => URL.revokeObjectURL(url);
     }
   }, [selectedFile]);
-
-  useEffect(() => {
-    // Carga de FFmpeg en el montaje
-    const loadFFmpeg = async () => {
-      const ffmpeg = ffmpegRef.current;
-      if (!ffmpeg.loaded) {
-        await ffmpeg.load();
-      }
-    };
-    loadFFmpeg();
-  }, []);
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -100,48 +85,9 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const trimVideo = async () => {
+  const confirmSelection = async () => {
     if (!selectedFile) return;
-    
-    // Si no recortó nada realmente, pasar el archivo intacto
-    if (startTime === 0 && endTime === duration) {
-       onFileSelected(selectedFile);
-       return;
-    }
-
-    setIsTrimming(true);
-    try {
-      const ffmpeg = ffmpegRef.current;
-      
-      // Escribir archivo al FS virtual de ffmpeg
-      const inputName = 'input.mp4';
-      const outputName = 'output.mp4';
-      await ffmpeg.writeFile(inputName, await fetchFile(selectedFile));
-
-      // Ejecutar ffmpeg para recortar (-ss: inicio, -t: duración, -c:v copy: copiar codec sin recodificar)
-      const trimDuration = endTime - startTime;
-      await ffmpeg.exec([
-        '-i', inputName,
-        '-ss', startTime.toString(),
-        '-t', trimDuration.toString(),
-        '-c', 'copy',
-        outputName
-      ]);
-
-      // Leer resultado
-      const data = await ffmpeg.readFile(outputName);
-      
-      // Crear un blob y nuevo obj 'File' recortado
-      const trimmedBlob = new Blob([new Uint8Array(data as any)], { type: 'video/mp4' });
-      const trimmedFile = new File([trimmedBlob], `recortado_${selectedFile.name}`, { type: 'video/mp4' });
-      
-      onFileSelected(trimmedFile);
-    } catch (error) {
-      console.error(error);
-      alert("Hubo un error recortando el video.");
-    } finally {
-      setIsTrimming(false);
-    }
+    onFileSelected(selectedFile, startTime, endTime);
   };
 
   const cancelSelection = () => {
@@ -161,7 +107,6 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
           </h2>
           <button 
             onClick={cancelSelection}
-            disabled={isTrimming}
             className="text-sm text-bg bg-muted hover:bg-muted/80 disabled:bg-line px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             Cancelar
@@ -258,15 +203,12 @@ export default function Uploader({ onFileSelected }: { onFileSelected: (f: File)
             
             <div className="flex justify-end pt-4 border-t border-line">
               <button 
-                onClick={trimVideo}
-                disabled={isTrimming}
-                className="bg-brand hover:opacity-90 disabled:opacity-50 text-bg font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-opacity shadow-md cursor-pointer disabled:cursor-not-allowed"
+                onClick={confirmSelection}
+                className="bg-brand hover:opacity-90 disabled:opacity-50 text-bg font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-opacity shadow-md cursor-pointer"
               >
-                {isTrimming ? (
-                  <><Loader2 size={18} className="animate-spin" /> Recortando video...</>
-                ) : (
-                  <><CheckCircle size={18} /> Confirmar y Procesar</>
-                )}
+                <>
+                  <CheckCircle size={18} /> Confirmar y Procesar
+                </>
               </button>
             </div>
           </div>
